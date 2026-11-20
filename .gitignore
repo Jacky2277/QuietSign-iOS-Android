@@ -1,7 +1,7 @@
 # 构建产物
 build/
 tmp/
-*.ipa
+/build/*.ipa
 
 # 编辑器/系统
 .vs/
@@ -18,3 +18,6 @@ server/auto_run*.log
 server/.venv/
 server/__pycache__/
 *.pyc
+
+# 例外：发布用安装包要入仓
+!QuietSign-*-unsigned.ipa

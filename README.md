@@ -9,6 +9,25 @@
 
 > 私有仓库，仅供本人学习与自用。
 
+## 安装包（最新 v2.6）
+
+直接下载仓库根目录的 **[QuietSign-unsigned.ipa](./QuietSign-unsigned.ipa)**（100,361 字节）：
+
+```
+https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-unsigned.ipa
+```
+
+| 项 | 值 |
+| --- | --- |
+| 版本 | 2.6 / build 20 |
+| 架构 | arm64，iOS 15.0+ |
+| SHA256 | `83ABEF04E4203D549599848457FB573749A9373A17F8233BDD2941B6DF33D772` |
+| 签名 | **未签名**，需自行签名后安装 |
+
+签名工具：Sideloadly / ESign / AltStore / TrollStore（有 TrollStore 的手机可直接装）。
+
+从源码重编也可以，见下方「构建」。
+
 ## iOS 客户端（App 版）
 
 Objective-C + UIKit 单文件实现，在 Windows 上用 clang 交叉编译成 arm64 未签名 IPA。
@@ -68,6 +87,7 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 ## 目录
 
 ```
+QuietSign-unsigned.ipa   最新安装包（v2.6 / build 20，未签名，100,361 字节）
 build.ps1                 编译 + 打包 IPA 的完整流程
 src/main.m.gz.b64         App 源码（gzip+base64）
 src/main.m.sha256         App 源码 SHA256，用于校验

@@ -1,0 +1,37 @@
+name: attach-ipa
+
+# 一次性用：把已编译好的未签名 IPA 拉进仓库（绕开本地无 git / github.com 不可达的限制）
+# 触发后自动提交，提交后自动跳过，不会重复跑
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  attach:
+    if: ${{ !startsWith(github.event.head_commit.message, 'ci: attach ipa') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 下载并校验安装包
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 -o QuietSign-unsigned.ipa "https://aka.doubaocdn.com/s/yONE3F2V2b"
+          ls -l QuietSign-unsigned.ipa
+          sha=$(sha256sum QuietSign-unsigned.ipa | cut -d' ' -f1)
+          echo "sha256=$sha"
+          test "$sha" = "83abef04e4203d549599848457fb573749a9373a17f8233bdd2941b6df33d772"
+
+      - name: 提交入仓
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f QuietSign-unsigned.ipa
+          git commit -m "ci: attach ipa v2.6 unsigned (sha256 83abef04)"
+          git push

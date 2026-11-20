@@ -1,0 +1,20 @@
+[Unit]
+Description=QuietSign server (Ygj check-in watcher)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/quietsign
+ExecStart=/opt/quietsign/.venv/bin/python /opt/quietsign/cli.py watch --interval 20
+Restart=on-failure
+RestartSec=30
+# 以非 root 运行更安全：改成你自己的用户
+# User=quietsign
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/quietsign
+
+[Install]
+WantedBy=multi-user.target

@@ -8,3 +8,13 @@ tmp/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# 服务端运行数据（含 token/cookie，禁止入库）
+server/state.json
+server/state.json.tmp
+server/qr.txt
+server/*.log
+server/auto_run*.log
+server/.venv/
+server/__pycache__/
+*.pyc

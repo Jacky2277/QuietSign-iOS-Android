@@ -1,10 +1,17 @@
-# 静签 (QuietSign-iOS)
+# 静签 (QuietSign)
 
-广东金融学院「易广金」签到客户端。Objective-C + UIKit 单文件实现，在 Windows 上用 clang 交叉编译成 arm64 未签名 IPA。
+广东金融学院「易广金」签到项目。同一套协议、两条实现路线，合并归档：
+
+| 版本 | 位置 | 跑在哪 | 关机/断网还行不行 |
+| --- | --- | --- | --- |
+| **iOS 客户端** | `src/` + `build.ps1` | 自己的 iPhone（未签名 IPA） | 不行，手机得开机联网 |
+| **服务端脚本** | `server/` | 任意 Linux 服务器 / 挂机主机 | **行**，本机只是控制端 |
 
 > 私有仓库，仅供本人学习与自用。
 
-## 功能
+## iOS 客户端（App 版）
+
+Objective-C + UIKit 单文件实现，在 Windows 上用 clang 交叉编译成 arm64 未签名 IPA。
 
 - 用易班 `loginToken` 登录，服务端会话由 App 持有
 - 拉今日课表，列出每节课的**签到窗口**（上课前 `startSignMin` 分钟 → `stopScanTime`）
@@ -12,7 +19,7 @@
 - **仅在签到窗口内提交**开关：未到开窗时间的课先挂起，到点自动提交；已过截止直接跳过
 - 扫码签到兜底（老师发码时仍可用）
 
-## 构建
+### 构建
 
 不依赖 Xcode，只依赖本地工具链（clang 18+ 与 iPhoneOS SDK）：
 
@@ -27,7 +34,28 @@ pwsh ./build.ps1
 
 产物：`build/QuietSign-unsigned.ipa`，需用 Sideloadly / AltStore / ESign / TrollStore 自行签名后安装（iOS 15+）。
 
-## 源码存放说明
+## 服务端脚本（云端版）
+
+全部逻辑在 `server/`，纯 HTTP，不需要 WebView、不需要模拟器。两层能力：
+
+- `cli.py` / `ygj.py` —— **协议层**：登录、设备对齐、课表、当前课程、提交。`cli.py watch` 只等别人发码（依赖外部二维码）。
+- `auto.py` / `auto2.py` —— **零扫码**：`startSignProcess` 自取 processID → `getPublicKey` 现取 key → AES-256-ECB 现造码 → `saveSignNew2` 提交，完全不依赖任何人扫码。
+- `readqr.py` / `sign_from_qr.py` —— 从一张截图里解出 processID 再重造码（截图可以糊、可以过期）。
+
+```bash
+cd server
+bash install.sh                      # 建 .venv 装依赖
+. .venv/bin/activate
+python3 cli.py login --token <易班loginToken>
+python3 cli.py status                # 现在有没有课要签
+python3 auto2.py --wait-until 13:58 --until 14:20   # 到点自己造码自己签
+```
+
+`auto.py` → `auto2.py` 的关键转折：v1 的 pid 必须来自真实考勤流程（要么有人扫码、要么 `--allow-start` 自己开），v2 发现 `startSignProcess` **不校验身份、不校验时间、对同一节课幂等**，于是自己就能拿到合法 pid，彻底零依赖。
+
+> **注意：`state.json` / `qr.txt` / `*.log` 含 token、cookie、studentID，已被 `.gitignore` 排除，永远不要入库或截图分享。**
+
+## 源码存放说明（App 部分）
 
 `src/main.m.gz.b64` 是**源码的 gzip + base64**。因为推送环境只能通过 GitHub API 以文本传输，二进制/超长内容会被截断，gzip 后体积降到约 1/4 才能完整上传。
 
@@ -41,12 +69,12 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 
 ```
 build.ps1                 编译 + 打包 IPA 的完整流程
-src/main.m.gz.b64         源码（gzip+base64）
-src/main.m.sha256         源码 SHA256，用于校验
+src/main.m.gz.b64         App 源码（gzip+base64）
+src/main.m.sha256         App 源码 SHA256，用于校验
 src/Info.plist            App 配置（显示名「静签」，bundle id com.gduf.quietsign，2.6 / build 20）
-tools/unpack.ps1          还原源码
+tools/unpack.ps1          还原 App 源码
 docs/PROTOCOL.md          签到协议：端点、二维码算法、时间窗口、幂等性
-tools/                    辅助脚本
+server/                   服务端脚本（协议库、CLI、零扫码自动签到、二维码解码）
 ```
 
 > 应用图标未入仓（体积/传输限制）。`build.ps1` 会在 `src/` 下找不到 `AppIcon*.png` 时跳过图标。

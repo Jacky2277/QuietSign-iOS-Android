@@ -1,0 +1,10 @@
+# 构建产物
+build/
+tmp/
+*.ipa
+
+# 编辑器/系统
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db

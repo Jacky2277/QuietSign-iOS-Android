@@ -10,15 +10,15 @@
 
 > 私有仓库，仅供本人学习与自用。
 
-## 安装包（全部 v3.0）
+## 安装包
 
-| 平台 | 文件 | 大小 | 安装方式 |
-| --- | --- | --- | --- |
-| Android | **[QuietSign-v3.0.apk](./QuietSign-v3.0.apk)** | 324,061 | 直接装（已签名） |
-| iOS | **[QuietSign-v3.0-unsigned.ipa](./QuietSign-v3.0-unsigned.ipa)** | 100,515 | 自己签名后装 |
+| 平台 | 文件 | 大小 | 版本 | 安装方式 |
+| --- | --- | --- | --- | --- |
+| Android | **[QuietSign-v3.5.apk](./QuietSign-v3.5.apk)** | 332,253 | 3.5 / code 35 | 直接装（已签名） |
+| iOS | **[QuietSign-v3.0-unsigned.ipa](./QuietSign-v3.0-unsigned.ipa)** | 100,515 | 3.0 / build 30 | 自己签名后装 |
 
 ```
-https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0.apk
+https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.5.apk
 https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0-unsigned.ipa
 ```
 
@@ -27,13 +27,13 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0-unsigned.ipa
 | 项 | 值 |
 | --- | --- |
 | 包名 | `com.gduf.chuxiao` |
-| 版本 | 3.0 / versionCode 30 |
+| 版本 | 3.5 / versionCode 35 |
 | 最低系统 | Android 8.0（API 26） |
 | targetSdk | 34 |
-| SHA256 | `498FA7BF8B36D7416B711BF0714F576EB7956377780A728CB41D7F0E47FB4B36` |
+| SHA256 | `31207F4EF7F72578DF6A2F1BD80E7708AE34075BE7C5D1D35073464C19B1A511` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 
-**iOS IPA**
+**iOS IPA**（本次未更新，仍为 v3.0）
 
 | 项 | 值 |
 | --- | --- |
@@ -45,6 +45,17 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0-unsigned.ipa
 
 签名工具（iOS）：Sideloadly / ESign / AltStore / TrollStore。
 
+### v3.5 改了什么（仅 Android）
+
+- **新增「一键读取本机 token（需 root）」**：直接在本机从易班进程内存里读出 32 位 `loginToken`，并自动做服务端严格校验（必须能换到易广金的 `verify_request` 才算有效），读取成功后弹框显示完整 token、支持一键复制。
+- **修复 su 定位**：部分机型（小米 Magisk 等）`su` 不在 App 的 PATH（实际在 `/product/bin/su`），改为按绝对路径逐个探测。
+- iOS 端本次**没有改动**，仍为 v3.0。
+
+### 历史版本
+
+- **v3.1 / v3.2**：尝试「网页扫码登录」自动拿 token。实测易班轻应用在服务端校验客户端身份，网页会话只能拿到 `yiban_user_token`（拿它访问 iapp 会返回「请重新登录」），故该路径不可用，入口保留为兜底。
+- **v3.0**：见下方「v3.0 改了什么」。
+
 ### v3.0 改了什么
 
 - **iOS：修复「跨天返校」不出二维码**。原先只有「生成凭证」成功后学号才写进内存，冷启动直接点跨天返校会因学号为空静默失败；现在跨天返校每次提交前先 `loginAndBind:`（重新登录 + 设备对齐），拿回学号并刷新会话后再提交。
@@ -52,7 +63,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0-unsigned.ipa
 - token 失效时两端都直接回登录页/提示更换，不再只留一行灰字。
 - 版本号 3.0（iOS build 30 / Android versionCode 30）；产物带版本号，不再同名覆盖。
 
-历史版本：`QuietSign-unsigned.ipa`（v2.6 / build 20，100,361 字节）。
+历史产物：`QuietSign-unsigned.ipa`（v2.6 / build 20，100,361 字节）、`QuietSign-v3.0.apk`、`QuietSign-v3.1.apk`、`QuietSign-v3.2.apk`。
 
 ## 客户端能力（两端一致）
 
@@ -62,6 +73,14 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v3.0-unsigned.ipa
 - 批量签到：勾选今日课程后一次提交；没有任何“进页面就自动签”的行为
 - 仅在签到窗口内提交：未开窗的先挂起，到点自动提交；已过截止直接跳过
 - 扫码签到兜底（老师发码时仍可用）
+
+## 拿 loginToken 的几种方式（Android）
+
+1. **一键读取（v3.5，需 root）**：手机上打开已登录的易班 → 静签首页点「一键读取本机 token（需 root）」→ 弹框显示 token，可复制。原理是 root 下读易班进程内存里的明文 `loginToken`，并调用 `f.yiban.cn` 做严格校验。
+2. **抓包**：ProxyPin / Stream 抓 `f.yiban.cn` 的请求头 `loginToken`（32 位）。
+3. **粘贴**：任何来源拿到的 32 位 token 都可以直接粘进输入框。
+
+> `loginToken` 是**账号级**凭据，与设备无关；但它和易班的登录会话绑定，**在别处重新登录易班会让旧 token 失效**。静签只是携带它调接口，不会把 token 用废。
 
 ## 构建
 
@@ -83,10 +102,10 @@ pwsh ./build.ps1
 
 ```powershell
 cd android
-pwsh ./build.ps1 -VersionName 3.0 -VersionCode 30
+pwsh ./build.ps1 -VersionName 3.5 -VersionCode 35
 java -jar $env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\lib\apksigner.jar sign `
   --ks quietsign-release.keystore --ks-pass pass:<口令> --key-pass pass:<口令> `
-  --out build/QuietSign-v3.0.apk build/aligned.apk
+  --out build/QuietSign-v3.5.apk build/aligned.apk
 ```
 
 要求：Android SDK build-tools + `platforms/android-*/android.jar` + JDK 11 以上。
@@ -125,6 +144,9 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 ## 目录
 
 ```
+QuietSign-v3.5.apk          Android 安装包（v3.5 / versionCode 35，已签名，332,253 字节）
+QuietSign-v3.2.apk          历史 Android 安装包（v3.2 / code 32）
+QuietSign-v3.1.apk          历史 Android 安装包（v3.1 / code 31）
 QuietSign-v3.0.apk          Android 安装包（v3.0 / versionCode 30，已签名，324,061 字节）
 QuietSign-v3.0-unsigned.ipa iOS 安装包（v3.0 / build 30，未签名，100,515 字节）
 QuietSign-unsigned.ipa      历史 iOS 安装包（v2.6 / build 20，100,361 字节）

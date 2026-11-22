@@ -1,4 +1,4 @@
-# 静签 (QuietSign)
+# 静签 (QuietSign)----基于FUCK-GDUF项目
 
 广东金融学院「易广金」签到项目。同一套协议，三端归档：
 
@@ -112,7 +112,7 @@ python3 auto2.py --wait-until 13:58 --until 14:20
 
 > **注意：`state.json` / `qr.txt` / `*.log` 含 token、cookie、studentID，已被 `.gitignore` 排除，永远不要入库或截图分享。**
 
-## 源码存放说明（IOS 部分）
+## 源码存放说明（iOS 部分）
 
 `src/main.m.gz.b64` 是 iOS 源码的 **gzip + base64**：推送环境只能通过 GitHub API 以文本传文件，二进制/超长内容会被截断，gzip 后体积降到约 1/4 才能完整上传。
 

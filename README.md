@@ -14,12 +14,12 @@
 
 | 平台 | 文件 | 大小 | 版本 | 安装方式 |
 | --- | --- | --- | --- | --- |
-| Android | **[QuietSign-v5.0.apk](./QuietSign-v5.0.apk)** | 336,349 | 5.0 / code 50 | 直接装（已签名） |
-| iOS | **[QuietSign-v5.0-unsigned.ipa](./QuietSign-v5.0-unsigned.ipa)** | 104,960 | 5.0 / build 50 | 自己签名后装 |
+| Android | **[QuietSign-v6.0.apk](./QuietSign-v6.0.apk)** | 344,747 | 6.0 / code 60 | 直接装（已签名） |
+| iOS | **[QuietSign-v6.0-unsigned.ipa](./QuietSign-v6.0-unsigned.ipa)** | 111,350 | 6.0 / build 60 | 自己签名后装 |
 
 ```
-https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v5.0.apk
-https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v5.0-unsigned.ipa
+https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0.apk
+https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 ```
 
 **Android APK**
@@ -27,10 +27,10 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v5.0-unsigned.ipa
 | 项 | 值 |
 | --- | --- |
 | 包名 | `com.gduf.chuxiao` |
-| 版本 | 5.0 / versionCode 50 |
+| 版本 | 6.0 / versionCode 60 |
 | 最低系统 | Android 8.0（API 26） |
 | targetSdk | 34 |
-| SHA256 | `77C90E1ACD38546753ACD6B9CDBCA8F10B498394D5C685CE5F463DC90EDF3AB4` |
+| SHA256 | `9DBD5306D3CA498D689D84CF715F3EE6F91D4C933D8E940F140B39BAE73AE6CB` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 
 **iOS IPA**
@@ -38,53 +38,65 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v5.0-unsigned.ipa
 | 项 | 值 |
 | --- | --- |
 | Bundle ID | `com.gduf.quietsign`（显示名「静签」） |
-| 版本 | 5.0 / build 50 |
+| 版本 | 6.0 / build 60 |
 | 架构 | arm64，iOS 15.0+ |
-| SHA256 | `B44E6F4B29AD58479BB0984A5B542062A960D2E600A8AF63916F07233B1466DD` |
+| SHA256 | `B57674130922031F549C2132F4ED8F0DB85213B70F6BBED3CD47175C546C155F` |
 | 签名 | **未签名** |
 
 签名工具（iOS）：Sideloadly / ESign / AltStore / TrollStore。
 
-## v5.0 改了什么（Android + iOS 同步）
+## v6.0 改了什么（界面重做，功能不变）
 
-**核心改动：内置「易班账号密码登录」，彻底不需要抓包、不需要 root。**
+这一版只动视觉与交互，协议、登录、造码、签到逻辑全部沿用 v5.x。
 
-- 登录页输入易班手机号 + 密码 → 本地用易班 App 内置的 4096 位 RSA 公钥（`RSA/ECB/PKCS1Padding`）加密密码 → `POST https://m.yiban.cn/api/v4/passport/login` → 返回的 `access_token` 就是 `loginToken`，直接可换易广金的 `verify_request`。
-- **替换掉原来的「易班扫码（网页）登录」**。该路径已被反复验证走不通：网页会话只能拿到 `yiban_user_token`，拿去访问 iapp 会返回「请重新登录」。
-- 密码只在内存里用一次，不落盘、不写入任何配置，也不发往易班官方接口以外的地址。
-- Android 端**保留**「一键读取本机 token（需 root）」，保留手动粘贴 32 位 token。
-- iOS 端**保留**手动粘贴 token 入口。
-- **修复 iOS 登录后自动生成出校码的 bug**：`refreshAll` → `bootstrap` 首步就是 `autoCreateOutSchoolRecord`，等于登录完就替用户向学校提交了一条常规出入申请。现在登录成功只停在「还没有生成凭证」，必须由用户点「生成凭证」才提交；Android 原本走的就是待生成状态，无此问题。
-- 版本号统一为 5.0（Android versionCode 50 / iOS build 50）。
+**统一视觉：Material 3 蓝色体系 + 深浅双主题**
 
-实测（与服务端接口层面）：
+| 语义色 | 浅色 | 深色 |
+| --- | --- | --- |
+| 背景 | `#F4F7FC` | `#101318` |
+| 卡片 | `#FFFFFF` | `#1C2129` |
+| 主色 | `#2F6BFF` | `#4D86FF` |
+| 容器 | `#E8EFFF` | `#1E2A44` |
+| 分割线 | `#EBF0F7` | `#2A3038` |
 
-```
-POST m.yiban.cn/api/v4/passport/login  →  {"response":100,"data":{"access_token":"<32位>"}}
-GET  f.yiban.cn/iapp378946 (两跳)      →  ygj.gduf.edu.cn/index.aspx?verify_request=<448hex>   ✓ token VALID
-```
+- Android：`applyTheme()` 读 `uiMode` 选两套色板，`onConfigurationChanged` 重建界面；状态栏同步深浅。
+- iOS：`GFUserDynamic()` 用 `UIColor colorWithDynamicProvider` 包一套动态色（`GFBG/GFCard/GFInk/GFSub/GFPrimary/GFCont`），系统切换深浅色时自动跟随。
 
-### 致谢
+**布局与组件**
 
-- **[luoyily/yiban-reverse](https://github.com/luoyily/yiban-reverse)** —— 感谢作者 **luoyily**。
-  v5.0 的「账号密码登录」完全是顺着这份逆向成果做出来的：`LoginUtil.login()` 的完整参数表、
-  `ct/app/v/sig/apn/identify/sversion` 各字段含义、4096 位 RSA 加密公钥、`getSig()` 的取值，
-  全都来自这个仓库。没有它提供的思路和还原代码，这一版做不出来。
+- Android 首页改 M3 结构：Top App Bar（「静签」+ 学校/学号 + 右上 `···`）→ section「我的凭证」→ 凭证卡片（标题 + 状态胶囊 + 二维码 + 姓名行 + 进度条 + 倒计时 + 状态）→ 双主按钮。
+- **「签到考勤」与「生成凭证」并列为同级主按钮**（各占一半宽度，48dp 高，24dp 圆角胶囊）。
+- 「跨天返校」「更换 token」降为次级 chip（淡蓝底、蓝字、24dp 圆角）。
+- 新增「关于作者」卡片：Jacky2277 / github.com/Jacky2277 / 设置三行，配 GitHub 主页跳转。
+- 底部标注「静签 v6.0 · 仅供技术交流」+ GitHub 地址。
+- 二维码补四角 L 框（`CornerFrame` 自绘），内缩 10dp、臂长 22dp，**浅色/深色同一套参数**；待生成时角框环住占位块，生成后环住二维码。
+- 卡片由投影改为 1dp 细描边，去掉 elevation 在圆角下方压出的直角灰带。
 
-### 历史版本
+**弹窗全部自绘**
 
-- **v3.5**：Android 新增「一键读取本机 token（需 root）」，从易班进程内存读 32 位 `loginToken` 并做服务端严格校验；修复 su 路径探测（`/product/bin/su`）。iOS 未改动。
-- **v3.2 / v3.1**：尝试「网页扫码登录」自动取 token，实测拿不到可用 token，入口保留为兜底（v5.0 起正式移除）。
-- **v3.0**：见下方「v3.0 改了什么」。
+系统 `AlertDialog` 的按钮会走 `Theme.Material.Light` 的 accent（青绿），与 App 不搭。v6.0 写了统一的 `m3Dialog()`：24dp 圆角卡片、20sp 标题、13sp 正文、右下角蓝色实心 pill + 淡蓝胶囊次按钮，深浅色跟随。覆盖「关于静签」「详细教程」「更换 token」「跨天返校」「易班授权」「读取 token」「扫码测试成功」共 7 处。
 
-### v3.0 改了什么
+> 弹窗首次出现时不再「先弹出再往下挪一截」：`show()` 之前按屏幕 88% 宽度 `measure` 出最终高度，一次性 `setLayout`，并 `setWindowAnimations(0)` 关掉系统入场动画。
 
-- **iOS：修复「跨天返校」不出二维码**。原先只有「生成凭证」成功后学号才写进内存，冷启动直接点跨天返校会因学号为空静默失败；现在跨天返校每次提交前先 `loginAndBind:`（重新登录 + 设备对齐），拿回学号并刷新会话后再提交。
-- **Android：签到页补齐课表与批量签到**。原来只有「扫码签到」，现在拉今日课表 → 列出每节课的签到窗口 → 勾选多门 → 一次批量提交；「仅在签到窗口内提交」开关会把未开窗的课挂起，到点自动提交。造码逻辑与 iOS 一致（`startSignProcess` 取 pid → `getPublicKey` 取 32 位 key → AES-256-ECB/PKCS7 → `saveSignNew2`），完全不依赖别人扫码。
-- token 失效时两端都直接回登录页/提示更换，不再只留一行灰字。
-- 版本号 3.0（iOS build 30 / Android versionCode 30）；产物带版本号，不再同名覆盖。
+**签到考勤页**
 
-历史产物：`QuietSign-v3.5.apk`（332,253 字节）、`QuietSign-v3.2.apk`、`QuietSign-v3.1.apk`、`QuietSign-v3.0.apk`、`QuietSign-v3.0-unsigned.ipa`（100,515 字节）、`QuietSign-unsigned.ipa`（v2.6 / build 20，100,361 字节）。
+顶栏改卡片白底 + 深色字；窗口开关、课程行改圆角卡片；批量签到为蓝色 pill，扫码签到为淡蓝 chip；勾选框选中态改主色。
+
+**转场**
+
+Android 点「签到考勤」改为**整页自下而上推入**（`slide_up_in` 350ms / `accelerate_decelerate`，前页 `stay` 不动），返回时向下滑出（`slide_down_out` 330ms），与 iOS `UIModalPresentationFullScreen` + `CoverVertical` 的观感对齐。
+
+**iOS 布局微调**
+
+- 首页「生成凭证」「跨天返校」统一为 200pt × 44pt × 22pt 圆角（原来 180/200 不等宽，且圆角 26 超过半高会被画成两端鼓包）。
+- 登录页「开始使用」同样修成 22 圆角。
+- 新增底部「关于作者 · Jacky2277 · 仅供技术交流」，点击打开 GitHub。
+
+## v5.1 修复了什么（随 v6.0 一并归档）
+
+- 两端识别 `login.ashx` 返回 `code:3` + `yibanUrl`：说明该易班账号**从未授权过「易广金」**（`iapp378946` / `client_id 0b77c3ac53bd5c65`），此时 `verify_request` 只有 160 字节（正常 448）。
+- 前端改为抛 `NEED_YIBAN_AUTH|<url>`，弹「需要先在易班授权一次」，点「去授权」用浏览器打开 `https://oauth.yiban.cn/code/html?client_id=0b77c3ac53bd5c65&redirect_uri=http://f.yiban.cn/iapp378946`。
+- 顺带确认：`https://ygj.gduf.edu.cn/index.aspx` 是「登录中，请稍候…」中转页，浏览器直接打开本来就「打不开」，属正常现象。
 
 ## 客户端能力（两端一致）
 
@@ -99,8 +111,8 @@ GET  f.yiban.cn/iapp378946 (两跳)      →  ygj.gduf.edu.cn/index.aspx?verify_
 
 ## 拿 loginToken 的几种方式（Android）
 
-1. **账号密码登录（v5.0，推荐，零 root 零抓包）**：登录页填易班手机号 + 密码，App 自己调接口换 token。
-2. **一键读取（v3.5，需 root）**：手机上打开已登录的易班 → 静签首页点「一键读取本机 token（需 root）」→ 弹框显示 token，可复制。原理是 root 下读易班进程内存里的明文 `loginToken`，并调用 `f.yiban.cn` 做严格校验。
+1. **账号密码登录（v5.0+，推荐，零 root 零抓包）**：登录页填易班手机号 + 密码，App 自己调接口换 token。
+2. **一键读取（v3.5+，需 root）**：手机上打开已登录的易班 → 静签首页点「一键读取本机 token（需 root）」→ 弹框显示 token，可复制。原理是 root 下读易班进程内存里的明文 `loginToken`，并调用 `f.yiban.cn` 做严格校验。
 3. **抓包**：ProxyPin / Stream 抓 `f.yiban.cn` 的请求头 `loginToken`（32 位）。
 4. **粘贴**：任何来源拿到的 32 位 token 都可以直接粘进输入框。
 
@@ -128,14 +140,14 @@ pwsh ./build.ps1
 
 ```powershell
 cd android
-pwsh ./build.ps1 -VersionName 5.0 -VersionCode 50
+pwsh ./build.ps1 -VersionName 6.0 -VersionCode 60
 java -jar $env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\lib\apksigner.jar sign `
   --ks quietsign-release.keystore --ks-pass pass:<口令> --key-pass pass:<口令> `
-  --out build/QuietSign-v5.0.apk build/aligned.apk
+  --out build/QuietSign-v6.0.apk build/aligned.apk
 ```
 
 要求：Android SDK build-tools + `platforms/android-*/android.jar` + JDK 11 以上。
-注意 `build.ps1` 只做到 `build/aligned.apk`，签名是单独一步（有的 SDK 版本里得手动跑 apksigner）。
+注意 `build.ps1` 只做到 `build/aligned.apk`，签名是单独一步。
 
 ## 服务端脚本（云端版）
 
@@ -168,23 +180,25 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 
 还原后可用 `src/main.m.sha256` 核对，字节精确。安装包为 binary，走的是 GitHub 网页直传，不受此限制。
 
-当前 `src/main.m.gz.b64` 对应 **v5.0** 源码：130,849 字节，SHA256 `9b9eed9d60b0a2ebcd10a2d873053365a7762af9ef4542edd4a23e0af716bced`。
+当前 `src/main.m.gz.b64` 对应 **v6.0** 源码：134,642 字节，SHA256 `efc710d999a8e5e1c6cf28dfe951529c19126abbc193c8f3bb1175e559373fec`。
 
 ## 目录
 
 ```
-QuietSign-v5.0.apk          Android 安装包（v5.0 / code 50，已签名，336,349 字节）
-QuietSign-v5.0-unsigned.ipa iOS 安装包（v5.0 / build 50，未签名，104,960 字节）
+QuietSign-v6.0.apk          Android 安装包（v6.0 / code 60，已签名，344,747 字节）
+QuietSign-v6.0-unsigned.ipa iOS 安装包（v6.0 / build 60，未签名，111,350 字节）
+QuietSign-v5.0.apk          历史 Android 安装包（v5.0 / code 50）
+QuietSign-v5.0-unsigned.ipa 历史 iOS 安装包（v5.0 / build 50）
 QuietSign-v3.5.apk          历史 Android 安装包（v3.5 / code 35）
 QuietSign-v3.2.apk          历史 Android 安装包（v3.2 / code 32）
 QuietSign-v3.1.apk          历史 Android 安装包（v3.1 / code 31）
-QuietSign-v3.0.apk          Android 安装包（v3.0 / code 30）
+QuietSign-v3.0.apk          历史 Android 安装包（v3.0 / code 30）
 QuietSign-v3.0-unsigned.ipa 历史 iOS 安装包（v3.0 / build 30）
 QuietSign-unsigned.ipa      历史 iOS 安装包（v2.6 / build 20）
 build.ps1                   iOS：clang 交叉编译 + 打包 IPA
-src/main.m.gz.b64           iOS 源码（gzip+base64，v5.0）
+src/main.m.gz.b64           iOS 源码（gzip+base64，v6.0）
 src/main.m.sha256           iOS 源码 SHA256
-src/Info.plist              iOS 配置（显示名「静签」，com.gduf.quietsign，5.0 / build 50）
+src/Info.plist              iOS 配置（显示名「静签」，com.gduf.quietsign，6.0 / build 60）
 tools/unpack.ps1            还原 iOS 源码
 docs/PROTOCOL.md            签到协议：端点、二维码算法、时间窗口、幂等性
 server/                     服务端脚本（协议库、CLI、零扫码自动签到、二维码解码）
@@ -194,6 +208,11 @@ server/                     服务端脚本（协议库、CLI、零扫码自动�
 
 ## 免责
 
-仅用于本人账号的考勤记录管理。请勿用于代替他人签到。使用者自行承担一切后果。
+仅供技术交流，请勿用于违规用途。仅用于本人账号的考勤记录管理，请勿代替他人签到。使用者自行承担一切后果。
 
 > 特别提示：v5.0 的账号密码登录会让该账号在易班 App 内的会话下线（服务端单会话机制），多人共用同一账号时请注意。
+
+## 致谢
+
+- **[luoyily/yiban-reverse](https://github.com/luoyily/yiban-reverse)** —— 感谢作者 **luoyily**。
+v5.0 的「账号密码登录」完全是顺着这份逆向成果做出来的：`LoginUtil.login()` 的完整参数表、`ct/app/v/sig/apn/identify/sversion` 各字段含义、4096 位 RSA 加密公钥、`getSig()` 的取值，全都来自这个仓库。没有它提供的思路和还原代码，这一版做不出来。

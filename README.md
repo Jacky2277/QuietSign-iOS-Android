@@ -74,9 +74,9 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 
 **弹窗全部自绘**
 
-系统 `AlertDialog` 的按钮会走 `Theme.Material.Light` 的 accent（青绿），与 App 不搭。v6.0 写了统一的 `m3Dialog()`：24dp 圆角卡片、20sp 标题、13sp 正文、右下角蓝色实心 pill + 淡蓝胶囊次按钮，深浅色跟随。覆盖「关于静签」「详细教程」「更换 token」「跨天返校」「易班授权」「读取 token」「扫码测试成功」共 7 处。
+v6.0 写了统一的 `m3Dialog()`：24dp 圆角卡片、20sp 标题、13sp 正文、右下角蓝色实心 pill + 淡蓝胶囊次按钮，深浅色跟随，共 7 处（「关于静签」「详细教程」「更换 token」「跨天返校」「易班授权」「读取 token」「扫码测试成功」）。
 
-> 弹窗首次出现时不再「先弹出再往下挪一截」：`show()` 之前按屏幕 88% 宽度 `measure` 出最终高度，一次性 `setLayout`，并 `setWindowAnimations(0)` 关掉系统入场动画。
+> 弹窗首次出现不再「先弹出再往下挪一截」：`show()` 之前按屏幕 88% 宽度 `measure` 出最终高度，一次性 `setLayout`，并 `setWindowAnimations(0)` 关掉系统入场动画。
 
 **签到考勤页**
 
@@ -94,9 +94,22 @@ Android 点「签到考勤」改为**整页自下而上推入**（`slide_up_in` 
 
 ## v5.1 修复了什么（随 v6.0 一并归档）
 
-- 两端识别 `login.ashx` 返回 `code:3` + `yibanUrl`：说明该易班账号**从未授权过「易广金」**（`iapp378946` / `client_id 0b77c3ac53bd5c65`），此时 `verify_request` 只有 160 字节（正常 448）。
+- 两端识别 `login.ashx` 返回 `code:3` + `yibanUrl`：该易班账号**从未授权过「易广金」**（`iapp378946` / `client_id 0b77c3ac53bd5c65`），此时 `verify_request` 只有 160 字节（正常 448）。
 - 前端改为抛 `NEED_YIBAN_AUTH|<url>`，弹「需要先在易班授权一次」，点「去授权」用浏览器打开 `https://oauth.yiban.cn/code/html?client_id=0b77c3ac53bd5c65&redirect_uri=http://f.yiban.cn/iapp378946`。
-- 顺带确认：`https://ygj.gduf.edu.cn/index.aspx` 是「登录中，请稍候…」中转页，浏览器直接打开本来就「打不开」，属正常现象。
+- 顺带确认：`https://ygj.gduf.edu.cn/index.aspx` 是「登录中，请稍候…」中转页，浏览器直接打开本来就“打不开”，属正常现象。
+
+## v5.0 改了什么（重大：彻底不抓包）
+
+- 登录页改「易班账号密码登录」：手机号 + 密码 → 本地用易班 App 内置的 4096 位 RSA 公钥（`RSA/ECB/PKCS1Padding`）加密 → `POST https://m.yiban.cn/api/v4/passport/login` → 返回的 `access_token` 就是 `loginToken`，直接可换易广金的 `verify_request`。
+- 移除「易班扇码（网页）登录」：该路径只能拿到 `yiban_user_token`，拿去访问 iapp 会返回「请重新登录」。
+- 密码只在内存里用一次，不落盘、不上传。
+- Android 保留「一键读取本机 token（需 root）」与手动粘贴；iOS 保留手动粘贴。
+- 修复 iOS「登录后自动生成出校码」：登录成功只停在「还没有生成凭证」，必须手动点「生成凭证」才提交。
+
+```
+POST m.yiban.cn/api/v4/passport/login  →  {"response":100,"data":{"access_token":"<32位>"}}
+GET  f.yiban.cn/iapp378946 (两跳)      →  ygj.gduf.edu.cn/index.aspx?verify_request=<448hex>   ✓ valid
+```
 
 ## 客户端能力（两端一致）
 
@@ -105,14 +118,14 @@ Android 点「签到考勤」改为**整页自下而上推入**（`slide_up_in` 
 - 拉今日课表，列出每节课的签到窗口（上课前 `startSignMin` 分钟 → `stopScanTime`）
 - 批量签到：勾选今日课程后一次提交；没有任何“进页面就自动签”的行为
 - 仅在签到窗口内提交：未开窗的先挂起，到点自动提交；已过截止直接跳过
-- 扫码签到兜底（老师发码时仍可用）
+- 扇码签到兜底（老师发码时仍可用）
 
 > 「生成凭证」= 向学校提交一条常规出入申请，只有手动点按钮才会发生。登录本身不产生任何出入记录。
 
 ## 拿 loginToken 的几种方式（Android）
 
 1. **账号密码登录（v5.0+，推荐，零 root 零抓包）**：登录页填易班手机号 + 密码，App 自己调接口换 token。
-2. **一键读取（v3.5+，需 root）**：手机上打开已登录的易班 → 静签首页点「一键读取本机 token（需 root）」→ 弹框显示 token，可复制。原理是 root 下读易班进程内存里的明文 `loginToken`，并调用 `f.yiban.cn` 做严格校验。
+2. **一键读取（v3.5+，需 root）**：手机上打开已登录的易班 → 静签首页点「一键读取本机 token（需 root）」→ 弹框显示 token，可复制。
 3. **抓包**：ProxyPin / Stream 抓 `f.yiban.cn` 的请求头 `loginToken`（32 位）。
 4. **粘贴**：任何来源拿到的 32 位 token 都可以直接粘进输入框。
 
@@ -136,7 +149,7 @@ pwsh ./build.ps1
 
 ### Android
 
-不依赖 Gradle / Android Studio，用 SDK 自带的 `aapt2 + javac + d8 + zipalign + apksigner` 手工构建（ZXing core 3.5.3 已在 `libs/` 内，用于出校码渲染）：
+不依赖 Gradle / Android Studio，用 SDK 自带的 `aapt2 + javac + d8 + zipalign + apksigner` 手工构建（ZXing core 3.5.3 已在 `libs/` 内）：
 
 ```powershell
 cd android
@@ -166,7 +179,7 @@ python3 cli.py status
 python3 auto2.py --wait-until 13:58 --until 14:20
 ```
 
-`auto.py` → `auto2.py` 的关键转折：v1 的 pid 必须来自真实考勤流程（要么有人扫码，要么 `--allow-start` 自己开），v2 发现 `startSignProcess` **不校验身份、不校验时间、对同一节课幂等**，于是自己就能拿到合法 pid，彻底零依赖。
+`auto.py` → `auto2.py` 的关键转折：v1 的 pid 必须来自真实考勤流程，v2 发现 `startSignProcess` **不校验身份、不校验时间、对同一节课幂等**，于是自己就能拿到合法 pid，彻底零依赖。
 
 > **注意：`state.json` / `qr.txt` / `*.log` 含 token、cookie、studentID，已被 `.gitignore` 排除，永远不要入库或截图分享。**
 
@@ -178,7 +191,7 @@ python3 auto2.py --wait-until 13:58 --until 14:20
 pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 ```
 
-还原后可用 `src/main.m.sha256` 核对，字节精确。安装包为 binary，走的是 GitHub 网页直传，不受此限制。
+还原后可用 `src/main.m.sha256` 核对，字节精确。
 
 当前 `src/main.m.gz.b64` 对应 **v6.0** 源码：134,642 字节，SHA256 `efc710d999a8e5e1c6cf28dfe951529c19126abbc193c8f3bb1175e559373fec`。
 
@@ -204,15 +217,15 @@ docs/PROTOCOL.md            签到协议：端点、二维码算法、时间窗�
 server/                     服务端脚本（协议库、CLI、零扫码自动签到、二维码解码）
 ```
 
-> 安卓源码当前只在本机构建目录（未入库，体积/传输限制）；应用图标同样未入仓，`build.ps1` 会在缺图标时跳过。
+> 安卓源码当前只在本机构建目录（未入库）；应用图标同样未入仓。
 
 ## 免责
 
 仅供技术交流，请勿用于违规用途。仅用于本人账号的考勤记录管理，请勿代替他人签到。使用者自行承担一切后果。
 
-> 特别提示：v5.0 的账号密码登录会让该账号在易班 App 内的会话下线（服务端单会话机制），多人共用同一账号时请注意。
+> 特别提示：账号密码登录会让该账号在易班 App 内的会话下线（服务端单会话机制），多人共用同一账号时请注意。
 
 ## 致谢
 
 - **[luoyily/yiban-reverse](https://github.com/luoyily/yiban-reverse)** —— 感谢作者 **luoyily**。
-v5.0 的「账号密码登录」完全是顺着这份逆向成果做出来的：`LoginUtil.login()` 的完整参数表、`ct/app/v/sig/apn/identify/sversion` 各字段含义、4096 位 RSA 加密公钥、`getSig()` 的取值，全都来自这个仓库。没有它提供的思路和还原代码，这一版做不出来。
+v5.0 的「账号密码登录」完全是顺着这份逆向成果做出来的：`LoginUtil.login()` 的完整参数表、`ct/app/v/sig/apn/identify/sversion` 各字段含义、4096 位 RSA 加密公钥、`getSig()` 的取值，全都来自这个仓库。

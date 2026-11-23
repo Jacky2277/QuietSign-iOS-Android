@@ -30,7 +30,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 | 版本 | 6.0 / versionCode 60 |
 | 最低系统 | Android 8.0（API 26） |
 | targetSdk | 34 |
-| SHA256 | `9DBD5306D3CA498D689D84CF715F3EE6F91D4C933D8E940F140B39BAE73AE6CB` |
+| SHA256 | `1A87CD2FD29E4D5404D6F2199F26086AC121A073753908427488A551CE28853B` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 
 **iOS IPA**
@@ -85,6 +85,8 @@ v6.0 写了统一的 `m3Dialog()`：24dp 圆角卡片、20sp 标题、13sp 正�
 **转场**
 
 Android 点「签到考勤」改为**整页自下而上推入**（`slide_up_in` 350ms / `accelerate_decelerate`，前页 `stay` 不动），返回时向下滑出（`slide_down_out` 330ms），与 iOS `UIModalPresentationFullScreen` + `CoverVertical` 的观感对齐。
+
+> 补丁：Android 14（targetSdk 34）起系统会直接忽略 `overridePendingTransition()`，这就是「点了没动画」的原因。现在签到页改成在 `startActivity` 之前调 `overrideActivityTransition()`（返回时在 `finish()` 里调 `OVERRIDE_TRANSITION_CLOSE`），并给 `SignActivity` 单独套了一层 `SignTheme`，`windowAnimationStyle` 也指向同一组动画——代码与主题双保险，各家 ROM 都能推得动。
 
 **iOS 布局微调**
 

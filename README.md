@@ -5,10 +5,10 @@
 | 端 | 位置 | 跑在哪 | 关机/断网还行不行 |
 | --- | --- | --- | --- |
 | **iOS 客户端** | 根目录 IPA + `src/` | 自己的 iPhone（未签名 IPA） | 不行，手机得开机联网 |
-| **Android 客户端** | 根目录 APK + 本机构建目录 | 自己的安卓手机（已签名 APK） | 不行，手机得开机联网 |
+| **Android 客户端** | 根目录 APK + [`android/`](./android) | 自己的安卓手机（已签名 APK） | 不行，手机得开机联网 |
 | **服务端脚本** | `server/` | 任意 Linux 服务器 / 挂机主机 | **行**，本机只是控制端 |
 
-> 仓库私有，但代码本身以 **CC BY-NC-SA 4.0** 授权：允许转载、二创二改、自行编译分发，须注明原作者 **Jacky（GitHub: Jacky2277）** 并说明改动，禁止任何商业用途。完整条款见 [LICENSE](./LICENSE)。
+> 代码以 **CC BY-NC-SA 4.0** 授权：允许转载、二创二改、自行编译分发，须注明原作者 **Jacky（GitHub: Jacky2277）** 并说明改动，禁止任何商业用途。完整条款见 [LICENSE](./LICENSE)。
 
 ## 安装包
 
@@ -164,6 +164,7 @@ java -jar $env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\lib\apksigner.jar sig
 
 要求：Android SDK build-tools + `platforms/android-*/android.jar` + JDK 11 以上。
 注意 `build.ps1` 只做到 `build/aligned.apk`，签名是单独一步。
+签名材料不入库：请按 [`android/keystore.properties.example`](./android/keystore.properties.example) 生成自己的 keystore 后再签。
 
 ## 服务端脚本（云端版）
 
@@ -212,6 +213,8 @@ QuietSign-v3.0.apk          历史 Android 安装包（v3.0 / code 30）
 QuietSign-v3.0-unsigned.ipa 历史 iOS 安装包（v3.0 / build 30）
 QuietSign-unsigned.ipa      历史 iOS 安装包（v2.6 / build 20）
 build.ps1                   iOS：clang 交叉编译 + 打包 IPA
+android/                    Android 源码（8 个 Java 源文件、res 资源与图标、manifest、build 脚本）
+src/icons/                  iOS 应用图标（1024 / 120 / 180）
 src/main.m.gz.b64           iOS 源码（gzip+base64，v6.0）
 src/main.m.sha256           iOS 源码 SHA256
 src/Info.plist              iOS 配置（显示名「静签」，com.gduf.quietsign，6.0 / build 60）
@@ -220,7 +223,7 @@ docs/PROTOCOL.md            签到协议：端点、二维码算法、时间窗�
 server/                     服务端脚本（协议库、CLI、零扫码自动签到、二维码解码）
 ```
 
-> 安卓源码当前只在本机构建目录（未入库）；应用图标同样未入仓。
+> 安卓源码与素材均已入仓：源码在 [`android/`](./android)，图标在 `android/res/`（自适应图标 + 各密度）与 `src/icons/`（iOS 三档）。签名用的 `quietsign-release.keystore` 不入库，`.gitignore` 已排除 `*.keystore` / `keystore.properties`。
 
 ## 许可协议
 

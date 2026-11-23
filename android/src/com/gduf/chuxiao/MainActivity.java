@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
     volatile int gen = 0;
     volatile long nextRefreshAt = 0;
 
-    static final String VERSION = "6.0";
+    static final String VERSION = "6.5";
     boolean night = false;
     int cBg, cCard, cInk, cSub, cSec, cPrimary, cCont, cLine, cMuted;
     TextView stateChip;

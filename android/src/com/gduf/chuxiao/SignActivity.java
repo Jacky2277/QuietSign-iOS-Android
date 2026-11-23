@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -380,6 +382,22 @@ public class SignActivity extends Activity {
                 final String msg = e.getMessage() == null ? "加载失败" : e.getMessage();
                 ui.post(() -> {
                     loading = false;
+                    if (msg.startsWith("NEED_YIBAN_AUTH|")) {
+                        final String url = msg.substring("NEED_YIBAN_AUTH|".length());
+                        status.setText("你的易班账号还没有授权「易广金」");
+                        emptyLabel.setText("");
+                        hint.setText("授权完成后点右上角「刷新」");
+                        m3Dialog("需要先在易班授权一次",
+                                "这个易班账号还没有授权过「易广金」。\n\n点「去授权」会用浏览器打开易班授权页，用同一个易班账号登录后点「同意授权」，完成后回到静签点右上角刷新即可。",
+                                "去授权", () -> {
+                                    try {
+                                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                                    } catch (Exception ex) {
+                                        Toast.makeText(SignActivity.this, "没有可用的浏览器，请手动打开授权页", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                        return;
+                    }
                     status.setText("TOKEN_EXPIRED".equals(msg) ? "token 已失效，请回主界面更换 token" : msg);
                     emptyLabel.setText("");
                     hint.setText("点右上角刷新重试");

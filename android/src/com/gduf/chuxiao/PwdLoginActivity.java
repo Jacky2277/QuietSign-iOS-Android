@@ -1,11 +1,15 @@
 package com.gduf.chuxiao;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,12 +17,15 @@ import android.text.InputType;
 import android.util.Base64;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -46,12 +53,10 @@ import javax.crypto.Cipher;
  * 服务端回传 access_token —— 这个 token 即为 loginToken，可直接用于易广金凭证。
  *
  * 密码只在本机内存中使用，不写入任何存储、不上传到除易班官方接口以外的地址。
+ *
+ * v6.5：界面按 V6 蓝色体系重做（含深色模式），并补上「未授权易广金」的去授权入口。
  */
 public class PwdLoginActivity extends Activity {
-
-    static final int GREEN = 0xFF78B842;
-    static final int BAR = 0xFF6CA53A;
-    static final int BTN = 0xFF1B8C33;
 
     /** 易班 App 内置的密码加密公钥（4096 位，PKCS#1 v1.5）。 */
     static final String PUB_KEY =
@@ -62,89 +67,133 @@ public class PwdLoginActivity extends Activity {
     static final String LOGIN_URL = "https://m.yiban.cn/api/v4/passport/login";
     static final String IDENTIFY = "114514191981011";
 
+    // ---- V6 语义色（跟随系统深浅） ----
+    int cBg, cCard, cInk, cSub, cPrimary, cCont, cLine, cMuted;
+    int cWarn;
+    boolean night;
+
     final Handler ui = new Handler(Looper.getMainLooper());
     EditText phoneIn, pwdIn;
     TextView statusView;
     Button goBtn;
     volatile boolean busy = false;
 
+    void applyTheme() {
+        night = (getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        if (night) {
+            cBg = 0xFF101318; cCard = 0xFF1C2129; cInk = 0xFFE8ECF2; cSub = 0xFF8E99A8;
+            cPrimary = 0xFF4D86FF; cCont = 0xFF1E2A44; cLine = 0xFF2A3038; cMuted = 0xFF6E7886;
+            cWarn = 0xFFE0B457;
+        } else {
+            cBg = 0xFFF4F7FC; cCard = 0xFFFFFFFF; cInk = 0xFF1A1D23; cSub = 0xFF7A8494;
+            cPrimary = 0xFF2F6BFF; cCont = 0xFFE8EFFF; cLine = 0xFFEBF0F7; cMuted = 0xFFA8B2C0;
+            cWarn = 0xFF9A6A00;
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration cfg) {
+        super.onConfigurationChanged(cfg);
+        recreate();
+    }
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        applyTheme();
+        try {
+            getWindow().setStatusBarColor(cBg);
+            getWindow().getDecorView().setSystemUiVisibility(night ? 0 : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        } catch (Exception ignored) {
+        }
 
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(GREEN);
+        scroll.setBackgroundColor(cBg);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(root, new ViewGroup.LayoutParams(-1, -2));
         setContentView(scroll);
 
+        // 顶栏
         LinearLayout bar = new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setBackgroundColor(BAR);
-        bar.setPadding(dp(10), dp(8), dp(10), dp(8));
+        bar.setBackgroundColor(cCard);
+        bar.setPadding(dp(14), dp(10), dp(14), dp(10));
         root.addView(bar, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView back = tv("‹ 返回", 16, Color.WHITE, false);
+        TextView back = tv("‹ 返回", 15, cSub, false);
+        back.setPadding(dp(2), dp(6), dp(14), dp(6));
         back.setOnClickListener(v -> finish());
         bar.addView(back);
 
-        TextView title = tv("易班账号密码登录", 17, Color.WHITE, true);
+        TextView title = tv("易班账号密码登录", 18, cInk, true);
         title.setGravity(Gravity.CENTER);
-        bar.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+        bar.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+
+        LinearLayout spacer = new LinearLayout(this);
+        bar.addView(spacer, new LinearLayout.LayoutParams(dp(40), 1));
 
         LinearLayout pad = new LinearLayout(this);
         pad.setOrientation(LinearLayout.VERTICAL);
-        pad.setPadding(dp(20), dp(18), dp(20), dp(24));
+        pad.setPadding(dp(16), dp(18), dp(16), dp(28));
         root.addView(pad, new LinearLayout.LayoutParams(-1, -2));
 
+        // 卡片
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackgroundColor(Color.WHITE);
-        card.setPadding(dp(16), dp(16), dp(16), dp(16));
+        card.setBackground(round(cCard, 24, true));
+        card.setPadding(dp(20), dp(20), dp(20), dp(18));
         pad.addView(card, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView intro = tv("用你的易班手机号和密码登录，App 会直接为你换取 token，"
-                + "不需要抓包、也不需要 root。\n\n密码只在本机用于一次登录请求，不会保存，也不会上传到除易班官方接口以外的任何地方。",
-                13, 0xFF444444, false);
+        TextView intro = tv("用易班手机号和密码登录，App 直接为你换取 token，不用抓包、也不用 root。\n\n"
+                + "密码只在本机用于一次登录请求，不会保存，也不会上传到易班官方接口以外的任何地方。",
+                13, cSub, false);
+        intro.setLineSpacing(dp(7), 1f);
         card.addView(intro);
 
-        phoneIn = new EditText(this);
-        phoneIn.setHint("易班手机号");
-        phoneIn.setTextSize(15);
-        phoneIn.setSingleLine(true);
+        TextView l1 = tv("易班手机号", 12, cSub, false);
+        l1.setPadding(0, dp(18), 0, dp(6));
+        card.addView(l1);
+
+        phoneIn = input("11 位手机号");
         phoneIn.setInputType(InputType.TYPE_CLASS_PHONE);
-        card.addView(phoneIn, topLp(dp(12), dp(48)));
+        card.addView(phoneIn, new LinearLayout.LayoutParams(-1, dp(50)));
 
-        pwdIn = new EditText(this);
-        pwdIn.setHint("易班密码");
-        pwdIn.setTextSize(15);
-        pwdIn.setSingleLine(true);
+        TextView l2 = tv("易班密码", 12, cSub, false);
+        l2.setPadding(0, dp(14), 0, dp(6));
+        card.addView(l2);
+
+        pwdIn = input("易班密码（不会保存）");
         pwdIn.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        card.addView(pwdIn, topLp(dp(8), dp(48)));
+        card.addView(pwdIn, new LinearLayout.LayoutParams(-1, dp(50)));
 
-        goBtn = new Button(this);
-        goBtn.setText("登录并获取 token");
-        goBtn.setTextSize(16);
-        goBtn.setAllCaps(false);
-        goBtn.setTextColor(Color.WHITE);
-        goBtn.setBackground(bg(BTN, 10));
-        card.addView(goBtn, topLp(dp(14), dp(48)));
+        goBtn = pill("登录并获取 token", cPrimary, 25, 16);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(-1, dp(50));
+        blp.topMargin = dp(18);
+        card.addView(goBtn, blp);
         goBtn.setOnClickListener(v -> doLogin());
 
-        statusView = tv("", 12, 0xFF777777, false);
-        statusView.setPadding(dp(2), dp(10), dp(2), 0);
+        statusView = tv("", 12, cSub, false);
+        statusView.setLineSpacing(dp(5), 1f);
+        statusView.setPadding(0, dp(12), 0, 0);
         card.addView(statusView);
 
-        TextView warn = tv("注意：这里登录会把该账号在易班 App 里的会话顶下线；"
-                + "换到的 token 只要不再重新登录就一直有效。", 11, 0xFF9A6A00, false);
-        warn.setPadding(0, dp(14), 0, 0);
+        TextView warn = tv("注意：这里登录会把该账号在易班 App 里的会话顶下线；换到的 token 只要不再重新登录就一直有效。",
+                11, cWarn, false);
+        warn.setLineSpacing(dp(4), 1f);
+        warn.setPadding(dp(4), dp(14), dp(4), 0);
         pad.addView(warn);
 
-        TextView how = tv("忘记密码？在易班 App 里用短信找回后，再回来登录。", 11, 0xCCFFFFFF, false);
-        how.setPadding(dp(2), dp(10), dp(2), 0);
+        TextView how = tv("忘记密码？在易班 App 里用短信找回后，再回来登录。", 11, cMuted, false);
+        how.setPadding(dp(4), dp(10), dp(4), 0);
         pad.addView(how);
+
+        TextView note = tv("静签 v6.5 · 仅供技术交流", 11, cMuted, false);
+        note.setGravity(Gravity.CENTER);
+        note.setPadding(0, dp(22), 0, 0);
+        pad.addView(note);
     }
 
     // ---------------- 登录流程 ----------------
@@ -163,7 +212,8 @@ public class PwdLoginActivity extends Activity {
         if (busy) return;
         busy = true;
         goBtn.setEnabled(false);
-        statusView.setText("正在登录…");
+        goBtn.setText("正在登录…");
+        statusView.setText("正在向易班验证账号…");
 
         new Thread(() -> {
             String token = null, sid = null, err = null;
@@ -185,24 +235,55 @@ public class PwdLoginActivity extends Activity {
             ui.post(() -> {
                 busy = false;
                 goBtn.setEnabled(true);
+                goBtn.setText("登录并获取 token");
                 if (t != null && em == null) {
                     statusView.setText("登录成功，学号 " + s + "，正在返回…");
-                    Intent data = new Intent();
-                    data.putExtra("token", t);
-                    setResult(RESULT_OK, data);
+                    finishWithToken(t);
                     ui.postDelayed(this::finish, 400);
-                } else if (t != null) {
+                    return;
+                }
+                if (t != null && em != null && em.startsWith("NEED_YIBAN_AUTH|")) {
+                    // 拿到 token 了，但这个易班账号还没授权过「易广金」
+                    finishWithToken(t);
+                    statusView.setText("你的易班账号还没有授权「易广金」");
+                    showYibanAuth(em.substring("NEED_YIBAN_AUTH|".length()));
+                    return;
+                }
+                if (t != null) {
                     // 登录成功但易广金校验没过：token 仍可能有效，交给上层判定
                     statusView.setText("已拿到 token，但易广金校验未通过：" + em);
-                    Intent data = new Intent();
-                    data.putExtra("token", t);
-                    setResult(RESULT_OK, data);
-                    ui.postDelayed(this::finish, 1200);
-                } else {
-                    statusView.setText("登录失败：" + em);
+                    finishWithToken(t);
+                    return;
                 }
+                if (em != null && em.startsWith("NEED_YIBAN_AUTH|")) {
+                    statusView.setText("你的易班账号还没有授权「易广金」");
+                    showYibanAuth(em.substring("NEED_YIBAN_AUTH|".length()));
+                    return;
+                }
+                statusView.setText("登录失败：" + em);
             });
         }).start();
+    }
+
+    void finishWithToken(String t) {
+        Intent data = new Intent();
+        data.putExtra("token", t);
+        setResult(RESULT_OK, data);
+    }
+
+    /** 未授权易广金时，给出「去授权」入口，而不是把 NEED_YIBAN_AUTH| 原样丢给用户。 */
+    void showYibanAuth(final String url) {
+        m3Dialog("需要先在易班授权一次",
+                "这个易班账号还没有授权过「易广金」。\n\n点「去授权」会用浏览器打开易班授权页，用同一个易班账号登录后点「同意授权」，完成后回到静签再点生成凭证。",
+                "去授权", () -> {
+                    finish();
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    } catch (Exception ex) {
+                        Toast.makeText(PwdLoginActivity.this, "没有可用的浏览器，请手动打开授权页", Toast.LENGTH_LONG).show();
+                    }
+                },
+                "稍后再说", this::finish);
     }
 
     /** 调易班 passport 登录接口，返回 access_token（即 loginToken）。 */
@@ -291,17 +372,37 @@ public class PwdLoginActivity extends Activity {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics());
     }
 
-    LinearLayout.LayoutParams topLp(int topMargin, int height) {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, height);
-        lp.topMargin = topMargin;
-        return lp;
-    }
-
-    GradientDrawable bg(int color, float radiusDp) {
+    GradientDrawable round(int color, float radiusDp, boolean stroke) {
         GradientDrawable g = new GradientDrawable();
         g.setColor(color);
         g.setCornerRadius(dp(radiusDp));
+        if (stroke) g.setStroke(dp(1), cLine);
         return g;
+    }
+
+    Button pill(String text, int color, float radiusDp, float sizeSp) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setTextSize(sizeSp);
+        b.setTextColor(Color.WHITE);
+        b.setAllCaps(false);
+        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setStateListAnimator(null);
+        b.setElevation(0);
+        b.setBackground(round(color, radiusDp, false));
+        return b;
+    }
+
+    EditText input(String hint) {
+        EditText e = new EditText(this);
+        e.setHint(hint);
+        e.setHintTextColor(cMuted);
+        e.setTextColor(cInk);
+        e.setTextSize(15);
+        e.setSingleLine(true);
+        e.setPadding(dp(14), 0, dp(14), 0);
+        e.setBackground(round(cCont, 14, false));
+        return e;
     }
 
     TextView tv(String s, float size, int color, boolean bold) {
@@ -312,5 +413,71 @@ public class PwdLoginActivity extends Activity {
         if (bold) v.setTypeface(Typeface.DEFAULT_BOLD);
         v.setLineSpacing(dp(4), 1f);
         return v;
+    }
+
+    /** M3 风格对话框：圆角卡片 + 双 pill 按钮，跟随深浅色（与主界面一致） */
+    void m3Dialog(String title, String msg, String posText, Runnable posAct, String negText, Runnable negAct) {
+        final Dialog d = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        LinearLayout wrap = new LinearLayout(this);
+        wrap.setOrientation(LinearLayout.VERTICAL);
+        wrap.setGravity(Gravity.CENTER);
+        wrap.setPadding(dp(20), dp(24), dp(20), dp(24));
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setBackground(round(cCard, 24, false));
+        box.setPadding(dp(22), dp(22), dp(22), dp(16));
+        box.setElevation(dp(10));
+
+        box.addView(tv(title, 19, cInk, true));
+        if (msg != null && !msg.isEmpty()) {
+            TextView m = tv(msg, 13, cSub, false);
+            m.setLineSpacing(dp(7), 1f);
+            m.setPadding(0, dp(10), 0, 0);
+            box.addView(m);
+        }
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.END);
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
+        rlp.topMargin = dp(18);
+        box.addView(row, rlp);
+
+        if (negText != null) {
+            TextView neg = tv(negText, 14, cSub, false);
+            neg.setGravity(Gravity.CENTER);
+            neg.setPadding(dp(16), 0, dp(16), 0);
+            neg.setBackground(round(cCont, 22, false));
+            LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(-2, dp(44));
+            nlp.rightMargin = dp(8);
+            row.addView(neg, nlp);
+            neg.setOnClickListener(v -> {
+                d.dismiss();
+                if (negAct != null) negAct.run();
+            });
+        }
+
+        Button pos = pill(posText, cPrimary, 22, 14);
+        pos.setPadding(dp(20), 0, dp(20), 0);
+        row.addView(pos, new LinearLayout.LayoutParams(-2, dp(44)));
+        pos.setOnClickListener(v -> {
+            d.dismiss();
+            if (posAct != null) posAct.run();
+        });
+
+        wrap.addView(box, new LinearLayout.LayoutParams(-1, -2));
+        d.setContentView(wrap);
+
+        int wpx = (int) (getResources().getDisplayMetrics().widthPixels * 0.88);
+        wrap.measure(View.MeasureSpec.makeMeasureSpec(wpx, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        Window w = d.getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            w.setWindowAnimations(0);
+            w.setLayout(wpx, Math.max(wrap.getMeasuredHeight(), dp(80)));
+        }
+        d.show();
     }
 }

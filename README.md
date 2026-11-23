@@ -14,12 +14,12 @@
 
 | 平台 | 文件 | 大小 | 版本 | 安装方式 |
 | --- | --- | --- | --- | --- |
-| Android | **[QuietSign-v6.0.apk](./QuietSign-v6.0.apk)** | 402,665 | 6.0 / code 60 | 直接装（已签名） |
-| iOS | **[QuietSign-v6.0-unsigned.ipa](./QuietSign-v6.0-unsigned.ipa)** | 293,459 | 6.0 / build 60 | 自己签名后装 |
+| Android | **[QuietSign-v6.5.apk](./QuietSign-v6.5.apk)** | 402,665 | 6.5 / code 65 | 直接装（已签名） |
+| iOS | **[QuietSign-v6.5-unsigned.ipa](./QuietSign-v6.5-unsigned.ipa)** | 294,034 | 6.5 / build 65 | 自己签名后装 |
 
 ```
-https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0.apk
-https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
+https://github.com/Jacky2277/QuietSign-iOS-Android/raw/main/QuietSign-v6.5.apk
+https://github.com/Jacky2277/QuietSign-iOS-Android/raw/main/QuietSign-v6.5-unsigned.ipa
 ```
 
 **Android APK**
@@ -27,10 +27,10 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 | 项 | 值 |
 | --- | --- |
 | 包名 | `com.gduf.chuxiao` |
-| 版本 | 6.0 / versionCode 60 |
+| 版本 | 6.5 / versionCode 65 |
 | 最低系统 | Android 8.0（API 26） |
 | targetSdk | 34 |
-| SHA256 | `6642047F259D1027B7D6949C8AE8B5B55A65C91DB392099B10455C95FBBA733C` |
+| SHA256 | `ECD36B0881D771BE8876BBC508D8819015662C7033B319BC6D882836BD00F1FC` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 
 **iOS IPA**
@@ -38,12 +38,20 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 | 项 | 值 |
 | --- | --- |
 | Bundle ID | `com.gduf.quietsign`（显示名「静签」） |
-| 版本 | 6.0 / build 60 |
+| 版本 | 6.5 / build 65 |
 | 架构 | arm64，iOS 15.0+ |
-| SHA256 | `4944A8B02AC940FA254D5B0D128CEAA3D531B78DF2CD19389DCBD56FCB0B212E` |
+| SHA256 | `D72848906225E3E0C2E2AA09C9BC4734CB9F54BC6AE91905DE0EA4B94AAC76EA` |
 | 签名 | **未签名** |
 
 签名工具（iOS）：Sideloadly / ESign / AltStore / TrollStore。
+
+## v6.5 修了什么（授权入口补齐 + 登录页适配）
+
+- **签到考勤页补上「去授权」入口**：之前只有主界面的「生成凭证」会处理 `NEED_YIBAN_AUTH`，签到考勤页遇到同一错误只是把原始串（`NEED_YIBAN_AUTH|https://oauth.yiban.cn/...`）塞进状态行，用户根本不知道要去哪授权。现在两端都会弹自绘对话框：标题「需要先在易班授权一次」，点「去授权」直接打开授权页，完成后回静签点右上角刷新即可。
+- **Android 登录页重做**：`PwdLoginActivity` 原本还是 v5 的绿色旧样式（绿底、纯白直角卡片、无深色模式），这版按 V6 蓝色体系重写——24dp 圆角卡片 + 1dp 描边、输入框淡蓝底 14dp 圆角、50dp pill 主按钮、跟随系统深浅、状态栏同步。
+- **登录页同样补授权提示**：拿到 token 但这个易班账号没授权「易广金」时，不再把 `NEED_YIBAN_AUTH|` 原样显示，改为弹「需要先在易班授权一次」并保留 token。
+- iOS 同步：`SignViewController` 的 `finishError:` 与账号密码登录的错误分支都会识别该前缀并弹出「去授权」，不再把内部错误码露给用户。
+- 版本 6.5 / code 65 / build 65，沿用原签名证书，可覆盖安装。
 
 ## v6.0 改了什么（界面重做，功能不变）
 
@@ -156,7 +164,7 @@ pwsh ./build.ps1
 
 ```powershell
 cd android
-pwsh ./build.ps1 -VersionName 6.0 -VersionCode 60
+pwsh ./build.ps1 -VersionName 6.5 -VersionCode 65
 java -jar $env:LOCALAPPDATA\Android\Sdk\build-tools\37.0.0\lib\apksigner.jar sign `
   --ks quietsign-release.keystore --ks-pass pass:<口令> --key-pass pass:<口令> `
   --out build/QuietSign-v6.0.apk build/aligned.apk
@@ -197,13 +205,15 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 
 还原后可用 `src/main.m.sha256` 核对，字节精确。
 
-当前 `src/main.m.gz.b64` 对应 **v6.0** 源码：134,642 字节，SHA256 `efc710d999a8e5e1c6cf28dfe951529c19126abbc193c8f3bb1175e559373fec`。
+当前 `src/main.m.gz.b64` 对应 **v6.5** 源码：136,481 字节，SHA256 `098d08dabc389c3a5078c6af42629d3cc29c182959ea617dea9d4fb64c6aec75`。
 
 ## 目录
 
 ```
-QuietSign-v6.0.apk          Android 安装包（v6.0 / code 60，已签名，402,665 字节）
-QuietSign-v6.0-unsigned.ipa iOS 安装包（v6.0 / build 60，未签名，293,459 字节）
+QuietSign-v6.5.apk          Android 安装包（v6.5 / code 65，已签名，402,665 字节）
+QuietSign-v6.5-unsigned.ipa iOS 安装包（v6.5 / build 65，未签名，294,034 字节）
+QuietSign-v6.0.apk          历史 Android 安装包（v6.0 / code 60）
+QuietSign-v6.0-unsigned.ipa 历史 iOS 安装包（v6.0 / build 60）
 QuietSign-v5.0.apk          历史 Android 安装包（v5.0 / code 50）
 QuietSign-v5.0-unsigned.ipa 历史 iOS 安装包（v5.0 / build 50）
 QuietSign-v3.5.apk          历史 Android 安装包（v3.5 / code 35）

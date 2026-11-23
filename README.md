@@ -224,6 +224,8 @@ server/                     服务端脚本（协议库、CLI、零扫码自动�
 
 ## 许可协议
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-2F6BFF.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 本项目采用 **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)**（知识共享 署名—非商业性使用—相同方式共享 4.0 国际）。完整法律文本见 [LICENSE](./LICENSE)。
 
 | | 内容 |

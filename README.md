@@ -14,8 +14,8 @@
 
 | 平台 | 文件 | 大小 | 版本 | 安装方式 |
 | --- | --- | --- | --- | --- |
-| Android | **[QuietSign-v6.0.apk](./QuietSign-v6.0.apk)** | 344,747 | 6.0 / code 60 | 直接装（已签名） |
-| iOS | **[QuietSign-v6.0-unsigned.ipa](./QuietSign-v6.0-unsigned.ipa)** | 111,350 | 6.0 / build 60 | 自己签名后装 |
+| Android | **[QuietSign-v6.0.apk](./QuietSign-v6.0.apk)** | 402,665 | 6.0 / code 60 | 直接装（已签名） |
+| iOS | **[QuietSign-v6.0-unsigned.ipa](./QuietSign-v6.0-unsigned.ipa)** | 293,459 | 6.0 / build 60 | 自己签名后装 |
 
 ```
 https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0.apk
@@ -30,7 +30,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 | 版本 | 6.0 / versionCode 60 |
 | 最低系统 | Android 8.0（API 26） |
 | targetSdk | 34 |
-| SHA256 | `1A87CD2FD29E4D5404D6F2199F26086AC121A073753908427488A551CE28853B` |
+| SHA256 | `6642047F259D1027B7D6949C8AE8B5B55A65C91DB392099B10455C95FBBA733C` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 
 **iOS IPA**
@@ -40,7 +40,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 | Bundle ID | `com.gduf.quietsign`（显示名「静签」） |
 | 版本 | 6.0 / build 60 |
 | 架构 | arm64，iOS 15.0+ |
-| SHA256 | `B57674130922031F549C2132F4ED8F0DB85213B70F6BBED3CD47175C546C155F` |
+| SHA256 | `4944A8B02AC940FA254D5B0D128CEAA3D531B78DF2CD19389DCBD56FCB0B212E` |
 | 签名 | **未签名** |
 
 签名工具（iOS）：Sideloadly / ESign / AltStore / TrollStore。
@@ -71,6 +71,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v6.0-unsigned.ipa
 - 底部标注「静签 v6.0 · 仅供技术交流」+ GitHub 地址。
 - 二维码补四角 L 框（`CornerFrame` 自绘），内缩 10dp、臂长 22dp，**浅色/深色同一套参数**；待生成时角框环住占位块，生成后环住二维码。
 - 卡片由投影改为 1dp 细描边，去掉 elevation 在圆角下方压出的直角灰带。
+- 图标换成蓝底白色「Q + 对勾」：Q 的尾巴化成对勾；Android 用自适应图标（透明前景 + `#2F6BFF` 背景层，系统切圆切方都不掉主体），iOS 铺 1024 / 120 / 180 三档。
 
 **弹窗全部自绘**
 
@@ -200,8 +201,8 @@ pwsh ./tools/unpack.ps1   # 输出 SHA256 并自动校验
 ## 目录
 
 ```
-QuietSign-v6.0.apk          Android 安装包（v6.0 / code 60，已签名，344,747 字节）
-QuietSign-v6.0-unsigned.ipa iOS 安装包（v6.0 / build 60，未签名，111,350 字节）
+QuietSign-v6.0.apk          Android 安装包（v6.0 / code 60，已签名，402,665 字节）
+QuietSign-v6.0-unsigned.ipa iOS 安装包（v6.0 / build 60，未签名，293,459 字节）
 QuietSign-v5.0.apk          历史 Android 安装包（v5.0 / code 50）
 QuietSign-v5.0-unsigned.ipa 历史 iOS 安装包（v5.0 / build 50）
 QuietSign-v3.5.apk          历史 Android 安装包（v3.5 / code 35）

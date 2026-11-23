@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 签到页专用主题：只多挂一个 windowAnimationStyle，保证各家 ROM 都走同一套转场 -->
+    <style name="SignTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowAnimationStyle">@style/SignAnim</item>
+    </style>
+
+    <style name="SignAnim">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_up_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/stay</item>
+        <item name="android:activityCloseEnterAnimation">@anim/stay</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_down_out</item>
+    </style>
+</resources>

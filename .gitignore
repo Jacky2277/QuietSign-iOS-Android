@@ -19,5 +19,14 @@ server/.venv/
 server/__pycache__/
 *.pyc
 
+# Android 构建产物与签名材料（禁止入库）
+android/build/
+android/classes/
+android/dex/
+android/gen/
+android/keystore.properties
+android/*.keystore
+android/*.jks
+
 # 例外：发布用安装包要入仓
 !QuietSign-*-unsigned.ipa

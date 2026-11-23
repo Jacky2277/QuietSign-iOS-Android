@@ -29,7 +29,7 @@ https://github.com/Jacky2277/QuietSign-iOS/raw/main/QuietSign-v5.0-unsigned.ipa
 | 包名 | `com.gduf.chuxiao` |
 | 版本 | 5.0 / versionCode 50 |
 | 最低系统 | Android 8.0（API 26） |
-| targetSdk | 36 |
+| targetSdk | 34 |
 | SHA256 | `77C90E1ACD38546753ACD6B9CDBCA8F10B498394D5C685CE5F463DC90EDF3AB4` |
 | 签名 | 自签名（v1+v2+v3 全签名方案），证书 `CN=QuietSign` |
 

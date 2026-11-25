@@ -11,7 +11,7 @@
 | 分支 | `main` | `special` |
 | 包名 | `com.gduf.chuxiao` | `com.gduf.chuxiao.special` |
 | 应用名 | 静签 | 静签 Special |
-| 源码 | `src/com/gduf/chuxiao/`，8 个源文件 | `src/com/gduf/chuxiao/special/`，10 个源文件 |
+| 源码 | `src/com/gduf/chuxiao/`，8 个源文件 | `special-source/QuietSign-Special-V2.5-source.zip`，10 个源文件 |
 | 差异 | 原版首页、凭证卡与批量签到 | 重做首页 / 凭证页 / 注意事项，签到底部 sheet |
 
 两个包名不同，可以同时安装；应用数据、token 与登录状态互相独立。
@@ -24,7 +24,7 @@ build.ps1                    Windows 构建脚本（compile → link → javac �
 build.sh                     Linux / macOS 等价脚本
 keystore.properties.example  签名配置模板（复制为 keystore.properties 后填自己的口令）
 src/com/gduf/chuxiao/        普通版 8 个源文件
-src/com/gduf/chuxiao/special/ Special 版 10 个源文件（仅 special 分支）
+special-source/               Special 版完整源码包（仅 special 分支，10 个源文件）
 libs/zxing-core-3.5.3.jar    ZXing（二维码编解码，Apache-2.0）
 res/anim/                    转场：slide_up_in / slide_down_out / stay
 res/values/                  主题色、SignTheme / SheetTheme 动画样式

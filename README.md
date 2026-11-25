@@ -97,6 +97,18 @@
 - **版本与签名**：`V2.5 / code 25`，APK 505,065 字节，SHA-256 `F13F56CFA9E629B4BD4E2664870CAD96679F74EC26724F3D0B8CF0A2B24C4615`。
 - **源码包**：[QuietSign-Special-V2.5-source.zip](https://github.com/Jacky2277/QuietSign-iOS-Android/releases/download/special-v2.5/QuietSign-Special-V2.5-source.zip)，10 个源文件，不含签名密钥。
 
+## 🍎 iOS 版本 · v6.6
+
+<p align="center">
+  <img src="src/icons/AppIcon1024.png" width="76" alt="静签 iOS 图标">
+</p>
+
+iOS 端是原生 Objective-C 客户端，Bundle ID `com.gduf.quietsign`，支持 iOS 15.0+（arm64）。界面延续 V6 的 Material 3 蓝色体系，跟随系统深浅色切换，采用全屏签到页，并带「关于作者」入口。
+
+- **能做什么**：易班账号密码登录或粘贴 `loginToken`；生成出校 / 入校凭证；跨天返校；拉取今日课表；批量签到；老师或班委临时发码时扫码兜底。
+- **与 Android 的差异**：iOS 没有 root 一键读取 token，只能账号密码登录或手动粘贴；没有 Special UI 版本；安装包为未签名 IPA，需要 Sideloadly / ESign / AltStore 等工具自签。
+- **当前版本**：`6.6 / build 66`，305,951 字节，SHA-256 `06DD1BEC011DC15A24E6115BCDEF23F7D9118392FC57073A3F97F73B3D91CD6A`。本轮没有单独构建 iOS V6.8，也没有新增 iOS 功能日志；这个包是当前最新 iOS 版本，随 [v6.8 Release](https://github.com/Jacky2277/QuietSign-iOS-Android/releases/tag/v6.8) 一起提供。
+
 ## 📦 历史版本
 
 历史包统一归档在 [archive-v2.6-v6.5](https://github.com/Jacky2277/QuietSign-iOS-Android/releases/tag/archive-v2.6-v6.5)，仅作留档，不再维护。旧接口变更后，历史包可能已经无法使用。

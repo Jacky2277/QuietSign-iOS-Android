@@ -95,6 +95,7 @@
 - **成功回传首页**：签到成功后回到首页，用绿色成功条显示「签到成功」「第 X 节 · HH:mm 已提交」「查看记录」，不再只停留在签到页。
 - **新图标**：蓝底白色「清单 + 勾」，普通图标与自适应图标均已替换。
 - **版本与签名**：`V2.5 / code 25`，APK 505,065 字节，SHA-256 `F13F56CFA9E629B4BD4E2664870CAD96679F74EC26724F3D0B8CF0A2B24C4615`。
+- **源码包**：[QuietSign-Special-V2.5-source.zip](https://github.com/Jacky2277/QuietSign-iOS-Android/releases/download/special-v2.5/QuietSign-Special-V2.5-source.zip)，10 个源文件，不含签名密钥。
 
 ## 📦 历史版本
 
@@ -169,7 +170,7 @@ main 分支
 └─ tools/unpack.ps1         还原 iOS 源码
 
 special 分支
-└─ android/                 Special 版 Android 源码（独立包名 com.gduf.chuxiao.special）
+└─ special-source/QuietSign-Special-V2.5-source.zip   Special 版完整源码包（独立包名）
 ```
 
 - 普通版与 Special 版共用同一套易广金协议层，差异集中在首页、凭证页、注意事项与签到交互。
